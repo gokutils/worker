@@ -11,11 +11,11 @@ import "github.com/gokutils/workerqueux"
 - [type Option](<#Option>)
   - [func OnError\(callback func\(error\)\) Option](<#OnError>)
   - [func WithTimout\(timeout time.Duration\) Option](<#WithTimout>)
-- [type Qeux](<#Qeux>)
-  - [func NewQueux\[T any\]\(ctx context.Context, num int, Worker WorkerQeux\[T\], opts ...Option\) \*Qeux\[T\]](<#NewQueux>)
-  - [func \(impl \*Qeux\[T\]\) Push\(v T\) error](<#Qeux[T].Push>)
-  - [func \(impl \*Qeux\[T\]\) Start\(\)](<#Qeux[T].Start>)
-  - [func \(impl \*Qeux\[T\]\) Stop\(\)](<#Qeux[T].Stop>)
+- [type Queux](<#Queux>)
+  - [func NewQueux\[T any\]\(ctx context.Context, num int, Worker WorkerQeux\[T\], opts ...Option\) \*Queux\[T\]](<#NewQueux>)
+  - [func \(impl \*Queux\[T\]\) Push\(v T\) error](<#Queux[T].Push>)
+  - [func \(impl \*Queux\[T\]\) Start\(\)](<#Queux[T].Start>)
+  - [func \(impl \*Queux\[T\]\) Stop\(\)](<#Queux[T].Stop>)
 - [type Tick](<#Tick>)
   - [func NewTick\(ctx context.Context, num int, tickTime time.Duration, Worker WorkerTick, opts ...Option\) \*Tick](<#NewTick>)
   - [func \(impl \*Tick\) Start\(\)](<#Tick.Start>)
@@ -52,13 +52,13 @@ func WithTimout(timeout time.Duration) Option
 
 
 
-<a name="Qeux"></a>
-## type Qeux
+<a name="Queux"></a>
+## type Queux
 
 
 
 ```go
-type Qeux[T any] struct {
+type Queux[T any] struct {
     // contains filtered or unexported fields
 }
 ```
@@ -67,34 +67,34 @@ type Qeux[T any] struct {
 ### func NewQueux
 
 ```go
-func NewQueux[T any](ctx context.Context, num int, Worker WorkerQeux[T], opts ...Option) *Qeux[T]
+func NewQueux[T any](ctx context.Context, num int, Worker WorkerQeux[T], opts ...Option) *Queux[T]
 ```
 
 
 
-<a name="Qeux[T].Push"></a>
-### func \(\*Qeux\[T\]\) Push
+<a name="Queux[T].Push"></a>
+### func \(\*Queux\[T\]\) Push
 
 ```go
-func (impl *Qeux[T]) Push(v T) error
+func (impl *Queux[T]) Push(v T) error
 ```
 
 
 
-<a name="Qeux[T].Start"></a>
-### func \(\*Qeux\[T\]\) Start
+<a name="Queux[T].Start"></a>
+### func \(\*Queux\[T\]\) Start
 
 ```go
-func (impl *Qeux[T]) Start()
+func (impl *Queux[T]) Start()
 ```
 
 
 
-<a name="Qeux[T].Stop"></a>
-### func \(\*Qeux\[T\]\) Stop
+<a name="Queux[T].Stop"></a>
+### func \(\*Queux\[T\]\) Stop
 
 ```go
-func (impl *Qeux[T]) Stop()
+func (impl *Queux[T]) Stop()
 ```
 
 

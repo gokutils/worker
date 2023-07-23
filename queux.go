@@ -16,7 +16,7 @@ type params struct {
 	OnError func(err error)
 }
 
-type Qeux[T any] struct {
+type Queux[T any] struct {
 	coworker      int
 	worker        WorkerQeux[T]
 	golbalCtx     context.Context
@@ -26,7 +26,7 @@ type Qeux[T any] struct {
 	params        params
 }
 
-func (impl *Qeux[T]) start() {
+func (impl *Queux[T]) start() {
 	go func() {
 		for {
 			v, err := impl.queux.DequeueOrWaitForNextElementContext(impl.managerCtx)
@@ -50,7 +50,7 @@ func (impl *Qeux[T]) start() {
 	}()
 }
 
-func (impl *Qeux[T]) Start() {
+func (impl *Queux[T]) Start() {
 	if impl.managerCancel != nil {
 		return
 	}
@@ -59,11 +59,11 @@ func (impl *Qeux[T]) Start() {
 		impl.start()
 	}
 }
-func (impl *Qeux[T]) Push(v T) error {
+func (impl *Queux[T]) Push(v T) error {
 	return impl.queux.Enqueue(v)
 }
 
-func (impl *Qeux[T]) Stop() {
+func (impl *Queux[T]) Stop() {
 	if impl.managerCancel == nil {
 		return
 	}
@@ -72,13 +72,13 @@ func (impl *Qeux[T]) Stop() {
 	impl.managerCtx = nil
 }
 
-func NewQueux[T any](ctx context.Context, num int, Worker WorkerQeux[T], opts ...Option) *Qeux[T] {
+func NewQueux[T any](ctx context.Context, num int, Worker WorkerQeux[T], opts ...Option) *Queux[T] {
 	params := params{}
 	for i := range opts {
 		opts[i](&params)
 	}
 
-	return &Qeux[T]{
+	return &Queux[T]{
 		coworker:  num,
 		golbalCtx: ctx,
 		worker:    Worker,
