@@ -3,7 +3,7 @@
 # worker
 
 ```go
-import "github.com/gokutils/workerqueux"
+import "github.com/gokutils/worker"
 ```
 
 ## Index

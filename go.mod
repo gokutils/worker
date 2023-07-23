@@ -1,4 +1,4 @@
-module github.com/gokutils/workerqueux
+module github.com/gokutils/worker
 
 go 1.20
 
