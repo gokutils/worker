@@ -26,6 +26,22 @@ type Queux[T any] struct {
 	params        params
 }
 
+func (impl *Queux[T]) do(msg T) {
+	var ctx context.Context
+	var cancel func()
+	if impl.params.Timeout > 0 {
+		ctx, cancel = context.WithTimeout(impl.managerCtx, impl.params.Timeout)
+	} else {
+		ctx, cancel = context.WithCancel(impl.managerCtx)
+	}
+	defer cancel()
+	if err := impl.worker.Do(ctx, msg); err != nil {
+		if impl.params.OnError != nil {
+			impl.params.OnError(err)
+		}
+	}
+}
+
 func (impl *Queux[T]) start() {
 	go func() {
 		for {
@@ -33,19 +49,7 @@ func (impl *Queux[T]) start() {
 			if err != nil {
 				return
 			}
-			var ctx context.Context
-			var cancel func()
-			if impl.params.Timeout > 0 {
-				ctx, cancel = context.WithTimeout(impl.managerCtx, impl.params.Timeout)
-			} else {
-				ctx, cancel = context.WithCancel(impl.managerCtx)
-			}
-			defer cancel()
-			if err := impl.worker.Do(ctx, v.(T)); err != nil {
-				if impl.params.OnError != nil {
-					impl.params.OnError(err)
-				}
-			}
+			impl.do(v.(T))
 		}
 	}()
 }
@@ -59,6 +63,7 @@ func (impl *Queux[T]) Start() {
 		impl.start()
 	}
 }
+
 func (impl *Queux[T]) Push(v T) error {
 	return impl.queux.Enqueue(v)
 }
