@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/enriquebris/goconcurrentqueue"
+	"github.com/gokutils/container/queux"
 )
 
 type WorkerQeux[T any] interface {
@@ -22,7 +22,7 @@ type Queux[T any] struct {
 	golbalCtx     context.Context
 	managerCtx    context.Context
 	managerCancel func()
-	queux         *goconcurrentqueue.FIFO
+	queux         *queux.QueuxMemory[T]
 	params        params
 }
 
@@ -45,11 +45,11 @@ func (impl *Queux[T]) do(msg T) {
 func (impl *Queux[T]) start() {
 	go func() {
 		for {
-			v, err := impl.queux.DequeueOrWaitForNextElementContext(impl.managerCtx)
+			v, err := impl.queux.GetOrWait(impl.managerCtx)
 			if err != nil {
 				return
 			}
-			impl.do(v.(T))
+			impl.do(v)
 		}
 	}()
 }
@@ -65,7 +65,7 @@ func (impl *Queux[T]) Start() {
 }
 
 func (impl *Queux[T]) Push(v T) error {
-	return impl.queux.Enqueue(v)
+	return impl.queux.Push(v)
 }
 
 func (impl *Queux[T]) Stop() {
@@ -87,7 +87,7 @@ func NewQueux[T any](ctx context.Context, num int, Worker WorkerQeux[T], opts ..
 		coworker:  num,
 		golbalCtx: ctx,
 		worker:    Worker,
-		queux:     goconcurrentqueue.NewFIFO(),
+		queux:     queux.NewQueuxMemory[T](),
 		params:    params,
 	}
 }

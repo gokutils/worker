@@ -3,10 +3,6 @@ package worker
 import (
 	"context"
 	"time"
-
-	"log"
-
-	"github.com/enriquebris/goconcurrentqueue"
 )
 
 type WorkerTick interface {
@@ -21,8 +17,7 @@ type Tick struct {
 	coworker int
 	worker   WorkerTick
 
-	queux     *goconcurrentqueue.FIFO
-	askedTick chan time.Time
+	askedTick chan struct{}
 
 	tickTime time.Duration
 
@@ -46,28 +41,41 @@ func (impl *Tick) do() {
 }
 
 func (impl *Tick) start() {
-	ticker := time.NewTicker(impl.tickTime)
 	go func() {
+		impl.do()
 		for {
+			if impl.managerCtx == nil {
+				return
+			}
 			select {
-			case _, ok := <-ticker.C:
+			case _, ok := <-time.After(impl.tickTime):
 				if !ok {
-					ticker.Stop()
 					return
 				}
 				impl.do()
 			case _, ok := <-impl.askedTick:
 				if !ok {
-					ticker.Stop()
 					return
 				}
 				impl.do()
 			case <-impl.managerCtx.Done():
-				ticker.Stop()
 				return
 			}
 		}
 	}()
+
+}
+
+func (impl *Tick) TickNow() error {
+	if impl.managerCancel == nil {
+		return nil
+	}
+	select {
+	case impl.askedTick <- struct{}{}:
+		return nil
+	default:
+		return nil
+	}
 }
 
 func (impl *Tick) Start() {
@@ -75,25 +83,10 @@ func (impl *Tick) Start() {
 		return
 	}
 	impl.managerCtx, impl.managerCancel = context.WithCancel(impl.golbalCtx)
-	impl.askedTick = make(chan time.Time)
+	impl.askedTick = make(chan struct{})
 	for i := 0; i < impl.coworker; i++ {
 		impl.start()
 	}
-	go func() {
-		for {
-			_, err := impl.queux.DequeueOrWaitForNextElementContext(impl.managerCtx)
-			if err != nil {
-				log.Printf("Error on dequeux tick %s", err.Error())
-				impl.Stop()
-				return
-			}
-			impl.askedTick <- time.Now()
-		}
-	}()
-}
-
-func (impl *Tick) TickNow() error {
-	return impl.queux.Enqueue(time.Now())
 }
 
 func (impl *Tick) Stop() {
@@ -116,7 +109,6 @@ func NewTick(ctx context.Context, num int, tickTime time.Duration, Worker Worker
 		golbalCtx: ctx,
 		tickTime:  tickTime,
 		worker:    Worker,
-		queux:     goconcurrentqueue.NewFIFO(),
 		params:    params,
 	}
 }

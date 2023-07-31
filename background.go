@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/enriquebris/goconcurrentqueue"
+	"github.com/gokutils/container/queux"
 )
 
 type backgroundCtxKey string
@@ -34,7 +34,7 @@ type Background[T any, R any] struct {
 	golbalCtx     context.Context
 	managerCtx    context.Context
 	managerCancel func()
-	queux         *goconcurrentqueue.FIFO
+	queux         *queux.QueuxMemory[*MessageWithResponce[T, R]]
 	params        params
 }
 
@@ -63,12 +63,11 @@ func (impl *Background[T, R]) do(msg *MessageWithResponce[T, R]) {
 func (impl *Background[T, R]) start() {
 	go func() {
 		for {
-			v, err := impl.queux.DequeueOrWaitForNextElementContext(impl.managerCtx)
+			v, err := impl.queux.GetOrWait(impl.managerCtx)
 			if err != nil {
 				return
 			}
-			msg := v.(*MessageWithResponce[T, R])
-			impl.do(msg)
+			impl.do(v)
 		}
 	}()
 }
@@ -90,7 +89,7 @@ func (impl *Background[T, R]) Do(ctx context.Context, v T) (R, error) {
 		Output: make(chan Responce[R]),
 	}
 	defer close(tmp.Output)
-	if err := impl.queux.Enqueue(tmp); err != nil {
+	if err := impl.queux.Push(tmp); err != nil {
 		var noop R
 		return noop, err
 	}
@@ -117,7 +116,7 @@ func NewBackground[T any, R any](ctx context.Context, num int, task Task[T, R], 
 		coworker:  num,
 		golbalCtx: ctx,
 		worker:    task,
-		queux:     goconcurrentqueue.NewFIFO(),
+		queux:     queux.NewQueuxMemory[*MessageWithResponce[T, R]](),
 		params:    params,
 	}
 }
